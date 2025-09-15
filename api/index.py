@@ -1,4 +1,4 @@
-from app import app
+from main import app
 
 # This file serves as the entry point for Vercel
 # It imports the FastAPI instance from app.py
