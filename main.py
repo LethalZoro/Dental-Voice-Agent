@@ -72,27 +72,29 @@ class CallData(BaseModel):
 
 patient_clinic_data = {
     "appointment_date": "01-07-2025",
-    "clinic_name": "Blue Lines Dental Clinic",
-    "practice_tax_id": "123456",
-    "treating_dentist_name": "Dr. Dillon",
-    "dentist_npi": "789012",
-
+    "insurance_rep": "WEB",
     "insurance_carrier": "METLIFE PPO",
     "insurance_phone": "(800)275-4638",
-    "claims_address": "PO BOX 14093 EL PASO TX 79998",
-    "payor_id": "65978",
     
-    "insured_name": "Cooke, Marcell",
-    "insured_dob": "09-07-1947",
+    "insured_name": "Jane, Patrick",
+    "insured_dob": "09-07-1999",
     "insured_ss": "N/A",
     "insured_id": "104389769",
 
-    
-    "patient_name": "Cooke, Marcell",
-    "patient_dob": "09-07-1947",
     "relationship_to_patient": "SELF",
+    
+    "patient_name": "Jane, Patrick",
+    "patient_dob": "09-07-1999",
     "employer": "FEDERAL EMPLOYEES DENTAL AND",
-    "group_number": "121332",  
+    "group_number": "121332",
+
+    "claims_address": "PO BOX 14093 EL PASO TX 79998",
+    "payor_id": "65978",
+    
+    "clinic_name": "Blue Lines Dental Clinic",
+    "practice_tax_id": "123456",
+    "treating_dentist_name": "Dr. Mustafa",
+    "dentist_npi": "789012",
 }
 
 def call_squad(phone_num):
@@ -102,12 +104,12 @@ def call_squad(phone_num):
             squad={
                 "members": [
                     {
-                        "assistantId": "0096d5b1-0e68-4cd7-b9b0-18a94c09a27a", # 1. Introduction
+                        "assistantId": "5cd5625c-2f48-46e1-9575-3dc2b5efedc4", # 1. Introduction
                         "assistantDestinations": [
                             {
                                 "type": "assistant",
-                                "assistantId": "bb76ee96-c69f-4506-83f0-92ecfe3cc646",
-                                "description": "When the insurance provider heard the doctor NPI number and the practice tax ID and say okay or yes or he is ready for the patient info etc.",
+                                "assistantId": "7ca934ef-e8fa-4308-8b80-abdbba8d9e80",
+                                "description": "Occurs once the payment_basis and in_network_status are captured.",
                             }
                         ],
                         
@@ -116,28 +118,12 @@ def call_squad(phone_num):
                         }
                     },
                     {
-                        "assistantId": "bb76ee96-c69f-4506-83f0-92ecfe3cc646", # 2. Patient Info
+                        "assistantId": "7ca934ef-e8fa-4308-8b80-abdbba8d9e80", # 2. Deductibles & Maximums
                         "assistantDestinations": [
                             {
                                 "type": "assistant",
-                                "assistantId": "8bb05a45-b253-4a31-ad06-4f5411bc8158",
-                                "description": """transcript contains keywords like "I have it", "found them", "pulling it up", "what can I help you with", "how can I help".
-                                                    AND transcript does NOT contain keywords like "can't find", "not in the system", "don't see them", "incorrect".""",
-                            }
-                        ],
-                        
-                        "assistantOverrides": {
-                            "variableValues": patient_clinic_data
-                        }
-
-                    },
-                    {
-                         "assistantId": "8bb05a45-b253-4a31-ad06-4f5411bc8158", # 3. Basic Questions
-                        "assistantDestinations": [
-                            {
-                                "type": "assistant",
-                                "assistantId": "ef8acd63-96d1-4b6f-a239-f7bbb7684055",
-                                "description": """Proceed once the variables policy_active, effective_date, benefit_year_type, plan_type, and in_network_status are all populated.""",
+                                "assistantId": "eff2f1a7-4614-43bc-96ab-cd53ffd44a72",
+                                "description": "Occurs once the waiting_period and missing_tooth_clause are captured.",
                             }
                         ],
                         
@@ -146,12 +132,12 @@ def call_squad(phone_num):
                         }
                     },
                     {
-                         "assistantId": "ef8acd63-96d1-4b6f-a239-f7bbb7684055", # 4. Deductibles & Maximums
+                        "assistantId": "eff2f1a7-4614-43bc-96ab-cd53ffd44a72", # 3. Coinsurance Percentages
                         "assistantDestinations": [
                             {
                                 "type": "assistant",
-                                "assistantId": "e3d54f16-aa27-4ec4-b17b-699874506a0b",
-                                "description": """Occurs once the out_of_pocket_max_individual and out_of_pocket_max_family are captured.""",
+                                "assistantId": "9d6589f4-d0f3-4565-b2a9-7165dda1fae2",
+                                "description": "Occurs once the coinsurance_periodontics and coinsurance_oral_surgery are All captured.",
                             }
                         ],
                         
@@ -160,12 +146,12 @@ def call_squad(phone_num):
                         }
                     },
                     {
-                         "assistantId": "e3d54f16-aa27-4ec4-b17b-699874506a0b", # 5. Coinsurance & Clauses
+                        "assistantId": "9d6589f4-d0f3-4565-b2a9-7165dda1fae2", # 4. Freq A
                         "assistantDestinations": [
                             {
                                 "type": "assistant",
-                                "assistantId": "ae0151f1-3c67-4424-a7d1-1f749c2b1ae5",
-                                "description": """Occurs once the missing_tooth_clause and downgrade_posterior_composite are captured. """,
+                                "assistantId": "2f460c63-bd99-4393-8c17-10b9864e9a14",
+                                "description": "Occurs once the srp_4341_coverage and all_four_quads_same_day_allowed are captured.",
                             }
                         ],
                         
@@ -174,12 +160,26 @@ def call_squad(phone_num):
                         }
                     },
                     {
-                         "assistantId": "ae0151f1-3c67-4424-a7d1-1f749c2b1ae5", # 6. Ortho & Frequencies
+                        "assistantId": "2f460c63-bd99-4393-8c17-10b9864e9a14", # 5. Freq B
                         "assistantDestinations": [
                             {
                                 "type": "assistant",
-                                "assistantId": "51350eb9-923c-447e-be29-86f9b9ac9381",
-                                "description": """Occurs once the freq_fmx_pano and replacement_clause_crown_bridge_implant are captured.""",
+                                "assistantId": "f40c8e73-5c26-4e1e-8bd2-2fb04106f4cd",
+                                "description": "Occurs once the perio_maint_4910_coverage and missing_tooth_clause_applies are captured.",
+                            }
+                        ],
+                        
+                        "assistantOverrides": {
+                            "variableValues": patient_clinic_data
+                        }
+                    },
+                    {
+                        "assistantId": "f40c8e73-5c26-4e1e-8bd2-2fb04106f4cd", # 6. Freq C
+                        "assistantDestinations": [
+                            {
+                                "type": "assistant",
+                                "assistantId": "98b18cf5-3975-4352-9c4c-2c634b3f6108",
+                                "description": "Occurs once the ortho_balance_payment_schedule and ortho_work_in_progress_applies and occlusal_guard_9944_covered are All captured.",
                             }
                         ],
                         
