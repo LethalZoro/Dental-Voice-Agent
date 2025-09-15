@@ -4,8 +4,8 @@ uvicorn[standard]
 
 # API Client
 vapi-python  # Will be installed with --no-deps to avoid PyAudio dependency
-# PyAudio is completely removed - causing build failures on deployment platforms
-
+PyAudio
+daily-python
 # Form Handling
 python-multipart
 
