@@ -1,6 +1,6 @@
 # Environment variables
 .env
-
+test.ipynb
 # Python cache files
 __pycache__/
 *.py[cod]
@@ -59,4 +59,4 @@ var/
 wheels/
 *.egg-info/
 .installed.cfg
-*.egg
+*.eggtest.ipynb 
