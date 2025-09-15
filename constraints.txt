@@ -1,0 +1,2 @@
+# This file prevents PyAudio from being installed, even as a transitive dependency
+PyAudio
