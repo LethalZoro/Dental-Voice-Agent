@@ -3,7 +3,7 @@ fastapi
 uvicorn[standard]
 
 # API Client
-vapi-python  # Will be installed with --no-deps to avoid PyAudio dependency
+vapi_server_sdk  # Will be installed with --no-deps to avoid PyAudio dependency
 
 daily-python
 # Form Handling
