@@ -1,5 +1,4 @@
 # Web Frameworks
-PyAudio
 fastapi
 uvicorn[standard]
 
