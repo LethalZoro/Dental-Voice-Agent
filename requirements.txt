@@ -1,0 +1,25 @@
+# Web Frameworks
+flask>=2.0.0
+fastapi>=0.103.0
+uvicorn[standard]>=0.23.0
+
+# API Client
+vapi>=1.0.0
+
+# Form Handling
+python-multipart>=0.0.6
+
+# Templating
+jinja2>=3.0.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Date and Time Handling
+pytz>=2023.3
+
+# Type Annotations
+typing-extensions>=4.0.0
+
+# HTTP Requests (if needed)
+requests>=2.31.0

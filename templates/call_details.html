@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+{% block title %}Call Details{% endblock %}
+
+{% block head %}
+<style>
+    .list-group-item.active {
+        background-color: #4361ee;
+        border-color: #4361ee;
+        color: white;
+    }
+    
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        padding: 12px 20px;
+    }
+    
+    .list-group-item:first-child {
+        border-top: none;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 12px 20px;
+        font-weight: 500;
+    }
+    
+    .nav-tabs .nav-link.active {
+        border-bottom-color: transparent;
+        background-color: #fff;
+        color: #4361ee;
+    }
+    
+    .code-block {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .code-block pre {
+        margin-bottom: 0;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .transcript-container {
+        font-family: 'Segoe UI', sans-serif;
+        line-height: 1.6;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .chat-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .message {
+        display: block;
+        max-width: 80%;
+    }
+    
+    .ai-message {
+        align-self: flex-start;
+        margin-right: auto;
+    }
+    
+    .user-message {
+        align-self: flex-end;
+        margin-left: auto;
+    }
+    
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .ai-message .message-bubble {
+        background-color: #e9ecef;
+        color: #212529;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .user-message .message-bubble {
+        background-color: #4361ee;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .system-message {
+        text-align: center;
+        font-style: italic;
+        color: #6c757d;
+        font-size: 0.85rem;
+        padding: 8px 0;
+    }
+    
+    /* Audio player styling */
+    audio {
+        border-radius: 30px;
+        height: 40px;
+    }
+    
+    audio::-webkit-media-controls-panel {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center">
+                <a href="/calls" class="btn btn-outline-primary me-3">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Call History
+                </a>
+                <h4 class="mb-0">Call Details</h4>
+            </div>
+            <div class="d-flex align-items-center">
+                <a href="/" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-plus me-1"></i> New Call
+                </a>
+                <span class="badge rounded-pill 
+                    {% if call.status == 'scheduled' %}bg-secondary
+                    {% elif call.status == 'in_progress' %}bg-warning
+                    {% elif call.status == 'completed' %}bg-success
+                    {% elif call.status == 'failed' %}bg-danger
+                    {% else %}bg-info{% endif %} px-3 py-2">
+                    {{ call.status|capitalize }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Call Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-fingerprint text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Call ID</h6>
+                                <p class="font-monospace mb-0 fw-bold">{{ call.id }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-calendar-alt text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Date & Time</h6>
+                                <p class="mb-0 fw-bold">{{ call.timestamp }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-phone-alt text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Phone Number</h6>
+                                <p class="mb-0 fw-bold">{{ call.phone_number if call.phone_number else 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-clock text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Duration</h6>
+                                <p class="mb-0 fw-bold">{{ call.results.duration if call.results and call.results.duration else 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                                <i class="fas fa-dollar-sign text-danger"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Total Cost</h6>
+                                <p class="mb-0 fw-bold">
+                                    {% if call.results and call.results.cost %}
+                                        ${{ "%.2f"|format(call.results.cost|float) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if call.status in ['scheduled', 'in_progress'] %}
+                <div class="alert alert-info mt-4 d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-spinner fa-pulse fa-2x"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="alert-heading">Call in Progress</h5>
+                        <p class="mb-1">
+                            {% if call.status == 'scheduled' %}
+                            This call is scheduled but not yet started. The results will be available once the call is completed.
+                            {% else %}
+                            This call is in progress. The results will be available once the call is completed.
+                            {% endif %}
+                        </p>
+                        <div class="mt-3 d-flex align-items-center flex-wrap">
+                            <button class="btn btn-primary btn-sm" id="refreshBtn">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh Now
+                            </button>
+                            <div class="form-check ms-3 mt-2 mt-sm-0">
+                                <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked>
+                                <label class="form-check-label" for="autoRefreshToggle">
+                                    Auto-refresh every <span id="refreshCountdown" class="badge bg-light text-dark">10</span> seconds
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if call.results %}
+                <div class="card mt-4">
+                    <div class="card-body p-0">
+                        <ul class="nav nav-tabs nav-fill" id="resultTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                                    <i class="fas fa-file-alt me-2"></i>Summary
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="structured-tab" data-bs-toggle="tab" data-bs-target="#structured" type="button" role="tab">
+                                    <i class="fas fa-table me-2"></i>Structured Data
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button" role="tab">
+                                    <i class="fas fa-chart-bar me-2"></i>Evaluation
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="transcript-tab" data-bs-toggle="tab" data-bs-target="#transcript" type="button" role="tab">
+                                    <i class="fas fa-comment-alt me-2"></i>Transcript & Audio
+                                </button>
+                            </li>
+                        </ul>
+                
+                        <div class="tab-content border border-top-0 rounded-bottom" id="resultTabsContent">
+                            <div class="tab-pane fade show active p-4" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                                <h5 class="border-bottom pb-3 mb-3">
+                                    <i class="fas fa-file-alt me-2 text-primary"></i>
+                                    Call Summary
+                                </h5>
+                                <div class="bg-light p-3 rounded">
+                                    {{ call.results.summary if call.results.summary else 'No summary available' }}
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-2">
+                                            <i class="fas fa-sign-out-alt me-2 text-info"></i>
+                                            Ended Reason
+                                        </h6>
+                                        <div class="badge bg-secondary">
+                                            {{ call.results.ended_reason if call.results.ended_reason else 'Unknown' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="mb-2">
+                                            <i class="fas fa-clock me-2 text-warning"></i>
+                                            Call Timestamps
+                                        </h6>
+                                        <small class="d-block text-muted">
+                                            <strong>Started:</strong> {{ call.results.started_at_formatted if call.results and call.results.started_at_formatted else 'N/A' }}
+                                        </small>
+                                        <small class="d-block text-muted">
+                                            <strong>Ended:</strong> {{ call.results.ended_at_formatted if call.results and call.results.ended_at_formatted else 'N/A' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-pane fade p-4" id="structured" role="tabpanel" aria-labelledby="structured-tab">
+                                <h5 class="border-bottom pb-3 mb-3">
+                                    <i class="fas fa-table me-2 text-primary"></i>
+                                    Structured Data
+                                </h5>
+                                {% if call.results.structured_data %}
+                                <div class="code-block">
+                                    <pre id="structuredDataJson" class="bg-dark text-light p-3 rounded">{{ call.results.structured_data|tojson(indent=4) }}</pre>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No structured data available
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="tab-pane fade p-4" id="evaluation" role="tabpanel" aria-labelledby="evaluation-tab">
+                                <h5 class="border-bottom pb-3 mb-3">
+                                    <i class="fas fa-chart-bar me-2 text-primary"></i>
+                                    Success Evaluation
+                                </h5>
+                                {% if call.results.success_evaluation is not none %}
+                                <div class="text-center py-4">
+                                    <div class="display-1 mb-3 text-{{ 'success' if call.results.success_evaluation else 'danger' }}">
+                                        <i class="fas {{ 'fa-check-circle' if call.results.success_evaluation else 'fa-times-circle' }}"></i>
+                                    </div>
+                                    <h3>Call {{ 'Successful' if call.results.success_evaluation else 'Unsuccessful' }}</h3>
+                                    <p class="lead text-muted mt-2">
+                                        This call has been automatically evaluated as 
+                                        <strong class="text-{{ 'success' if call.results.success_evaluation else 'danger' }}">
+                                            {{ 'successful' if call.results.success_evaluation else 'unsuccessful' }}
+                                        </strong>
+                                        based on the conversation analysis.
+                                    </p>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No evaluation data available
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="tab-pane fade p-4" id="transcript" role="tabpanel" aria-labelledby="transcript-tab">
+                                <h5 class="border-bottom pb-3 mb-3">
+                                    <i class="fas fa-comment-alt me-2 text-primary"></i>
+                                    Transcript & Audio Recording
+                                </h5>
+                                
+                                <!-- Audio Player -->
+                                {% if call.results and call.results.recording_url %}
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-volume-up me-2"></i> Audio Recording</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="audio-player">
+                                            <audio controls class="w-100" style="max-width: 100%;">
+                                                <source src="{{ call.results.recording_url }}" type="audio/mpeg">
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                        </div>
+                                        <div class="mt-3 text-center">
+                                            <a href="{{ call.results.recording_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-download me-2"></i> Download Recording
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning mb-4">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Audio recording not available
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Full Transcript -->
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-file-alt me-2"></i> Full Transcript</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if call.results.transcript %}
+                                        <div class="transcript-container p-3 rounded" style="max-height: 500px; overflow-y: auto;">
+                                            <div class="chat-messages">
+                                                {% for line in call.results.transcript.split('\n') %}
+                                                    {% if line|trim %}
+                                                        {% if 'Agent:' in line or 'AI:' in line %}
+                                                            <div class="message ai-message">
+                                                                <div class="message-bubble">
+                                                                    {{ line|replace('Agent:', '')|replace('AI:', '')|trim }}
+                                                                </div>
+                                                            </div>
+                                                        {% elif 'Customer:' in line or 'User:' in line %}
+                                                            <div class="message user-message">
+                                                                <div class="message-bubble">
+                                                                    {{ line|replace('Customer:', '')|replace('User:', '')|trim }}
+                                                                </div>
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="system-message">
+                                                                {{ line }}
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            Transcript not available
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Manual refresh button
+        document.getElementById('refreshBtn')?.addEventListener('click', function() {
+            window.location.reload();
+        });
+        
+        // Auto-refresh functionality for in-progress or scheduled calls
+        const statusElement = document.querySelector('.badge');
+        if (statusElement && (statusElement.textContent.trim() === 'In Progress' || statusElement.textContent.trim() === 'Scheduled')) {
+            let countdownEl = document.getElementById('refreshCountdown');
+            let toggleEl = document.getElementById('autoRefreshToggle');
+            let countdown = 10;
+            let timer = null;
+            
+            // Function to start countdown
+            function startCountdown() {
+                clearInterval(timer);
+                countdown = 10;
+                countdownEl.textContent = countdown;
+                
+                timer = setInterval(() => {
+                    countdown--;
+                    countdownEl.textContent = countdown;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        window.location.reload();
+                    }
+                }, 1000);
+            }
+            
+            // Start initial countdown
+            if (toggleEl.checked) {
+                startCountdown();
+            }
+            
+            // Toggle auto-refresh
+            toggleEl.addEventListener('change', function() {
+                if (this.checked) {
+                    startCountdown();
+                } else {
+                    clearInterval(timer);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

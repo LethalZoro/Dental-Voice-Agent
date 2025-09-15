@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block head %}
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+    .accordion-button:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .accordion-item {
+        border-radius: 0.25rem;
+        margin-bottom: 5px;
+    }
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    .accordion-button:after {
+        background-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+    }
+    .progress-indicator {
+        height: 10px;
+        margin-bottom: 20px;
+    }
+    .accordion-button i {
+        color: #0d6efd;
+    }
+    
+    /* New styles for the improved layout */
+    .call-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .call-section h3 {
+        margin-bottom: 25px;
+        color: #0d6efd;
+    }
+    .call-btn {
+        margin-top: auto;
+        height: 60px;
+        font-size: 1.25rem;
+    }
+    .phone-icon {
+        font-size: 3.5rem;
+        color: #0d6efd;
+        margin-bottom: 20px;
+    }
+    /* Better spacing for the patient data section */
+    .card-body.data-section {
+        padding-bottom: 30px; /* Add some extra bottom padding for better spacing */
+    }
+    /* Make sure sticky call contains all its child elements */
+    .sticky-call {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    .form-group-sm {
+        margin-bottom: 10px;
+    }
+    .form-group-sm label {
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+        font-weight: 500;
+    }
+    .form-group-sm .form-control {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.9rem;
+    }
+    .data-card {
+        margin-bottom: 15px;
+    }
+    .data-card-header {
+        padding: 10px 15px;
+        background-color: #f1f8ff;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        display: flex;
+        align-items: center;
+    }
+    .data-card-body {
+        padding: 15px;
+    }
+    .data-card-icon {
+        color: #0d6efd;
+        margin-right: 8px;
+        width: 20px;
+        text-align: center;
+    }
+    .info-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin: 10px 0;
+    }
+    .sticky-call {
+        position: sticky;
+        top: 20px;
+    }
+    
+    @media (max-width: 991.98px) {
+        .sticky-call {
+            position: relative;
+            top: 0;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="/create_call" id="callForm">
+        <div class="row">
+            <!-- Left Column: Call Section -->
+            <div class="col-lg-4 mb-4">
+                <div class="sticky-call">
+                    <div class="card">
+                        <div class="card-body call-section">
+                            <div class="text-center">
+                                <i class="fas fa-headset phone-icon"></i>
+                                <h3>Make Insurance Verification Call</h3>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="phone_number" class="form-label">Insurance Provider Phone Number</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" class="form-control form-control-lg" id="phone_number" name="phone_number" 
+                                           placeholder="Enter phone number (e.g., +1234567890)" required>
+                                </div>
+                                <div class="form-text">Format: Include country code (e.g., +1 for USA)</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="verifyDataCheck" checked>
+                                    <label class="form-check-label" for="verifyDataCheck">
+                                        I've verified all patient and clinic data
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="progress mb-3" id="dataCompletionBar" style="height: 5px;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-auto">
+                                <button type="submit" class="btn btn-primary call-btn">
+                                    <i class="fas fa-phone-alt me-2"></i>Make Call Now
+                                </button>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <small class="text-muted">All patient information must be completed before making a call</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <a href="/calls" class="btn btn-outline-primary mb-2 w-100">
+                                <i class="fas fa-history me-2"></i> View Call History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Patient & Clinic Data -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Patient & Clinic Information</h5>
+                        <div>
+                            <button type="button" id="collapseAllBtn" class="btn btn-sm btn-outline-secondary me-2">
+                                <i class="fas fa-compress-alt"></i> Collapse All
+                            </button>
+                            <button type="button" id="expandAllBtn" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-expand-alt"></i> Expand All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body data-section">
+                        <!-- Appointment & Insurance Section -->
+                        <div class="data-card">
+                            <div class="data-card-header" data-bs-toggle="collapse" data-bs-target="#appointmentData" role="button" aria-expanded="true">
+                                <i class="fas fa-calendar-alt data-card-icon"></i> Appointment & Insurance
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div id="appointmentData" class="collapse show">
+                                <div class="data-card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="appointment_date">Appointment Date</label>
+                                            <input type="date" class="form-control" id="appointment_date" name="appointment_date" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insurance_rep">Insurance Rep</label>
+                                            <input type="text" class="form-control" id="insurance_rep" name="insurance_rep" value="WEB" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insurance_carrier">Insurance Carrier</label>
+                                            <input type="text" class="form-control" id="insurance_carrier" name="insurance_carrier" value="METLIFE PPO" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insurance_phone">Insurance Phone</label>
+                                            <input type="text" class="form-control" id="insurance_phone" name="insurance_phone" value="(800)275-4638" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Insured Information Section -->
+                        <div class="data-card">
+                            <div class="data-card-header" data-bs-toggle="collapse" data-bs-target="#insuredData" role="button" aria-expanded="true">
+                                <i class="fas fa-user-shield data-card-icon"></i> Insured Information
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div id="insuredData" class="collapse show">
+                                <div class="data-card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insured_name">Insured Name</label>
+                                            <input type="text" class="form-control" id="insured_name" name="insured_name" value="Cooke, Marcell" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insured_dob">Insured DOB</label>
+                                            <input type="text" class="form-control" id="insured_dob" name="insured_dob" value="09-07-1947" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insured_ss">Insured SS</label>
+                                            <input type="text" class="form-control" id="insured_ss" name="insured_ss" value="N/A" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="insured_id">Insured ID</label>
+                                            <input type="text" class="form-control" id="insured_id" name="insured_id" value="104389769" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-12 form-group-sm">
+                                            <label for="relationship_to_patient">Relationship to Patient</label>
+                                            <select class="form-select" id="relationship_to_patient" name="relationship_to_patient" required>
+                                                <option value="SELF" selected>SELF</option>
+                                                <option value="SPOUSE">SPOUSE</option>
+                                                <option value="CHILD">CHILD</option>
+                                                <option value="OTHER">OTHER</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Information Section -->
+                        <div class="data-card">
+                            <div class="data-card-header" data-bs-toggle="collapse" data-bs-target="#patientData" role="button" aria-expanded="true">
+                                <i class="fas fa-user data-card-icon"></i> Patient Information
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div id="patientData" class="collapse show">
+                                <div class="data-card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="patient_name">Patient Name</label>
+                                            <input type="text" class="form-control" id="patient_name" name="patient_name" value="Cooke, Marcell" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="patient_dob">Patient DOB</label>
+                                            <input type="text" class="form-control" id="patient_dob" name="patient_dob" value="09-07-1947" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="employer">Employer</label>
+                                            <input type="text" class="form-control" id="employer" name="employer" value="FEDERAL EMPLOYEES DENTAL AND" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="group_number">Group Number</label>
+                                            <input type="text" class="form-control" id="group_number" name="group_number" value="121332" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Claims Information Section -->
+                        <div class="data-card">
+                            <div class="data-card-header" data-bs-toggle="collapse" data-bs-target="#claimsData" role="button">
+                                <i class="fas fa-file-invoice-dollar data-card-icon"></i> Claims Information
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div id="claimsData" class="collapse show">
+                                <div class="data-card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="claims_address">Claims Address</label>
+                                            <input type="text" class="form-control" id="claims_address" name="claims_address" value="PO BOX 14093 EL PASO TX 79998" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="payor_id">Payor ID</label>
+                                            <input type="text" class="form-control" id="payor_id" name="payor_id" value="65978" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Clinic Information Section -->
+                        <div class="data-card">
+                            <div class="data-card-header" data-bs-toggle="collapse" data-bs-target="#clinicData" role="button">
+                                <i class="fas fa-tooth data-card-icon"></i> Clinic Information
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div id="clinicData" class="collapse show">
+                                <div class="data-card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="clinic_name">Clinic Name</label>
+                                            <input type="text" class="form-control" id="clinic_name" name="clinic_name" value="Blue Lines Dental Clinic" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="practice_tax_id">Practice Tax ID</label>
+                                            <input type="text" class="form-control" id="practice_tax_id" name="practice_tax_id" value="123456" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="treating_dentist_name">Treating Dentist Name</label>
+                                            <input type="text" class="form-control" id="treating_dentist_name" name="treating_dentist_name" value="Dr. Dillon" required>
+                                        </div>
+                                        <div class="col-md-6 form-group-sm">
+                                            <label for="dentist_npi">Dentist NPI</label>
+                                            <input type="text" class="form-control" id="dentist_npi" name="dentist_npi" value="789012" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-fill patient info if relationship is SELF
+        const relationshipSelect = document.getElementById('relationship_to_patient');
+        const insuredNameInput = document.getElementById('insured_name');
+        const insuredDobInput = document.getElementById('insured_dob');
+        const patientNameInput = document.getElementById('patient_name');
+        const patientDobInput = document.getElementById('patient_dob');
+        
+        // Function to update patient fields based on relationship
+        function updatePatientFields() {
+            if (relationshipSelect.value === 'SELF') {
+                patientNameInput.value = insuredNameInput.value;
+                patientDobInput.value = insuredDobInput.value;
+            }
+        }
+        
+        // Initial update
+        updatePatientFields();
+        
+        // Update when relationship changes
+        relationshipSelect.addEventListener('change', updatePatientFields);
+        
+        // Update patient fields when insured fields change if relationship is SELF
+        insuredNameInput.addEventListener('input', function() {
+            if (relationshipSelect.value === 'SELF') {
+                patientNameInput.value = this.value;
+            }
+        });
+        
+        insuredDobInput.addEventListener('input', function() {
+            if (relationshipSelect.value === 'SELF') {
+                patientDobInput.value = this.value;
+            }
+        });
+        
+        // Form validation
+        const form = document.getElementById('callForm');
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                event.preventDefault();
+                alert('Please fill out all required fields before making a call.');
+                
+                // Open accordion sections with invalid fields
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        const section = field.closest('.accordion-collapse');
+                        if (section && !section.classList.contains('show')) {
+                            const sectionId = section.id;
+                            const button = document.querySelector(`[data-bs-target="#${sectionId}"]`);
+                            if (button) {
+                                button.click();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Set default appointment date to today
+        const appointmentDateInput = document.getElementById('appointment_date');
+        if (!appointmentDateInput.value) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            appointmentDateInput.value = `${year}-${month}-${day}`;
+        }
+    });
+</script>
+{% endblock %}
