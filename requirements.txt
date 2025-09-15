@@ -4,6 +4,7 @@ uvicorn[standard]
 
 # API Client
 vapi-python
+PyAudio==0.2.13; sys_platform != "linux"  # Only install on non-Linux platforms
 
 # Form Handling
 python-multipart
