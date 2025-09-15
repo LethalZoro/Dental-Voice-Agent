@@ -330,23 +330,66 @@ def get_call_results(call_id):
         raise error
 
 def save_call_records():
-    """Save call records to a JSON file"""
-    with open('call_records.json', 'w') as f:
-        json.dump(call_records, f, indent=4, default=str)
+    """Save call records to a JSON file in /tmp directory"""
+    # Create /tmp directory if it doesn't exist
+    if not os.path.exists('/tmp'):
+        try:
+            os.makedirs('/tmp', exist_ok=True)
+            print("Created /tmp directory")
+        except Exception as e:
+            print(f"Could not create /tmp directory: {e}")
+    
+    # Use /tmp directory on Vercel or local directory in development
+    file_path = '/tmp/call_records.json' if os.path.exists('/tmp') else 'call_records.json'
+    
+    # Ensure the directory for the file exists
+    os.makedirs(os.path.dirname(file_path) if os.path.dirname(file_path) else '.', exist_ok=True)
+    
+    try:
+        with open(file_path, 'w') as f:
+            json.dump(call_records, f, indent=4, default=str)
+        print(f"Saved call records to {file_path}")
+    except Exception as e:
+        print(f"Error saving call records to {file_path}: {e}")
 
 def load_call_records():
     """Load call records from JSON file if it exists"""
     global call_records
-    try:
-        if os.path.exists('call_records.json'):
-            with open('call_records.json', 'r') as f:
-                call_records = json.load(f)
-    except Exception as e:
-        print(f"Error loading call records: {e}")
+    
+    # Create /tmp directory if it doesn't exist
+    if not os.path.exists('/tmp'):
+        try:
+            os.makedirs('/tmp', exist_ok=True)
+            print("Created /tmp directory")
+        except Exception as e:
+            print(f"Could not create /tmp directory: {e}")
+    
+    # Try /tmp directory first (for Vercel), then local directory
+    file_paths = ['/tmp/call_records.json', 'call_records.json']
+    
+    for file_path in file_paths:
+        try:
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    call_records = json.load(f)
+                    print(f"Loaded call records from {file_path}")
+                    return
+        except Exception as e:
+            print(f"Error loading call records from {file_path}: {e}")
+    
+    print("No call records found or could be loaded")
 
 # Application startup event
 @app.on_event("startup")
 async def startup_event():
+    # Create /tmp directory if it doesn't exist (useful for Vercel)
+    if not os.path.exists('/tmp'):
+        try:
+            os.makedirs('/tmp', exist_ok=True)
+            print("Created /tmp directory during startup")
+        except Exception as e:
+            print(f"Could not create /tmp directory during startup: {e}")
+    
     # Create templates directory if it doesn't exist
     os.makedirs('templates', exist_ok=True)
     # Create static directory and js subdirectory if they don't exist
@@ -478,7 +521,7 @@ if __name__ == "__main__":
     # Run the FastAPI app with uvicorn
     port = int(os.getenv("PORT", "8000"))
     debug = os.getenv("DEBUG", "False").lower() == "true"
-    uvicorn.run("app:app", host="127.0.0.1", port=port, reload=debug)
+    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=debug)
 
 # For Vercel serverless deployment
 app_handler = app
