@@ -1,0 +1,28 @@
+# Ignore virtual environment
+
+venv/
+.venv/
+env/
+
+# Ignore git and cache directories
+
+.git/
+**pycache**/
+\*.py[cod]
+
+# Ignore local development files
+
+\*.ipynb
+.env.local
+.env.development.local
+
+# Ignore test files
+
+test.ipynb
+test\*.py
+
+# Ignore logs and databases
+
+_.log
+_.sqlite
+\*.db

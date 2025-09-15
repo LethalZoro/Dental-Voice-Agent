@@ -1,5 +1,4 @@
 # Web Frameworks
-
 fastapi
 uvicorn[standard]
 
@@ -21,5 +20,9 @@ pytz
 # Type Annotations
 typing-extensions
 
-# HTTP Requests (if needed)
+# HTTP Requests
 requests
+
+# For deployment
+httpcore
+httpx
