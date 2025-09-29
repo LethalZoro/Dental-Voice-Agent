@@ -86,7 +86,7 @@ patient_clinic_data = {
     "patient_name": "Jane, Patrick",
     "patient_dob": "09-07-1999",
     "employer": "FEDERAL EMPLOYEES DENTAL AND",
-    "group_number": "121332",
+    "group_number": "121332",  # Keeping the same key name for compatibility, but it represents Member ID now
 
     "claims_address": "PO BOX 14093 EL PASO TX 79998",
     "payor_id": "65978",
@@ -94,8 +94,44 @@ patient_clinic_data = {
     "clinic_name": "Blue Lines Dental Clinic",
     "practice_tax_id": "123456",
     "treating_dentist_name": "Dr. Mustafa",
-    "dentist_npi": "789012",
+    "dentist_npi": "789012",  # Keeping the same key name for compatibility, but it represents NPI Number now
 }
+
+def call_emblem_health(phone_num):
+    """Call the Emblem Health assistant with the given phone number"""
+    try:
+        test_call = client.calls.create(
+            name="emblem_health_call",
+            assistant_id="a41cc19c-ff10-4bb7-93f1-e53101b7ec48", # Emblem Health assistant
+            phone_number_id=os.getenv("PHONE_NUMBER_ID"),
+            customer={
+                "number": phone_num,  
+            },
+            assistant_overrides={
+                "variableValues": patient_clinic_data
+            }
+        )
+
+        print(f"Emblem Health call initiated: {test_call.id}")
+        
+        # Store call record with patient and clinic data
+        call_record = {
+            "id": test_call.id,
+            "phone_number": phone_num,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "scheduled",  # Initial status is scheduled
+            "assistant_type": "emblem_health",  # Mark this as an Emblem Health call
+            "patient_data": patient_clinic_data.copy()  # Store a copy of the patient data used for this call
+        }
+        call_records.append(call_record)
+        
+        # Save to JSON file as backup
+        save_call_records()
+        
+        return test_call.id
+    except Exception as error:
+        print(f"Error initiating Emblem Health call: {error}")
+        raise error
 
 def call_squad(phone_num):
     try:
@@ -203,6 +239,7 @@ def call_squad(phone_num):
             "phone_number": phone_num,
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "scheduled",  # Initial status is scheduled
+            "assistant_type": "general",  # Mark this as a General call (default squad)
             "patient_data": patient_clinic_data.copy()  # Store a copy of the patient data used for this call
         }
         call_records.append(call_record)
@@ -464,6 +501,7 @@ async def call_details(request: Request, call_id: str):
 async def create_call_web(
     request: Request,
     phone_number: str = Form(...),
+    assistant_type: str = Form(...),  # Added assistant_type field
     appointment_date: str = Form(...),
     insurance_rep: str = Form(...),
     insurance_carrier: str = Form(...),
@@ -510,9 +548,28 @@ async def create_call_web(
     try:
         # Update global patient_clinic_data with form values
         global patient_clinic_data
-        patient_clinic_data = form_data
         
-        call_id = call_squad(phone_number)
+        # Prepare the required data based on assistant type
+        if assistant_type == "emblem_health":
+            # For Emblem Health, we only need 4 specific fields
+            emblem_data = {
+                "patient_name": form_data["patient_name"],
+                "group_number": form_data["group_number"],  # Member ID
+                "patient_dob": form_data["patient_dob"],
+                "dentist_npi": form_data["dentist_npi"]     # NPI Number
+            }
+            
+            # Update patient_clinic_data with just the required fields for Emblem Health
+            patient_clinic_data = emblem_data
+            
+            # Make the call
+            call_id = call_emblem_health(phone_number)
+        else:  # Default to "general" assistant which uses the squad
+            # Update patient_clinic_data with all form values
+            patient_clinic_data = form_data
+            
+            call_id = call_squad(phone_number)
+            
         return RedirectResponse(url=f"/calls/{call_id}", status_code=303)
     except Exception as e:
         return templates.TemplateResponse("index.html", {"request": request, "error": str(e)})

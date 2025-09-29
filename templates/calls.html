@@ -38,6 +38,7 @@
                             <tr>
                                 <th>Call ID</th>
                                 <th>Phone Number</th>
+                                <th>Assistant</th>
                                 <th>Date & Time</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -48,6 +49,13 @@
                             <tr class="call-row" data-id="{{ call.id }}">
                                 <td>{{ call.id }}</td>
                                 <td>{{ call.phone_number }}</td>
+                                <td>
+                                    {% if call.assistant_type == "emblem_health" %}
+                                    <span class="badge bg-info">Emblem Health</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">General</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ call.timestamp }}</td>
                                 <td>
                                     {% if call.status == 'scheduled' %}

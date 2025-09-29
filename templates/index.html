@@ -152,6 +152,18 @@
                             </div>
                             
                             <div class="mb-4">
+                                <label for="assistant_type" class="form-label">Select Insurance Provider</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fas fa-robot"></i></span>
+                                    <select class="form-select form-select-lg" id="assistant_type" name="assistant_type" required>
+                                        <option value="general">General</option>
+                                        <option value="emblem_health">Emblem Health</option>
+                                    </select>
+                                </div>
+                                <div class="form-text">Choose the insurance provider assistant to call</div>
+                            </div>
+                            
+                            <div class="mb-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="verifyDataCheck" checked>
                                     <label class="form-check-label" for="verifyDataCheck">
@@ -303,7 +315,7 @@
                                             <input type="text" class="form-control" id="employer" name="employer" value="FEDERAL EMPLOYEES DENTAL AND" required>
                                         </div>
                                         <div class="col-md-6 form-group-sm">
-                                            <label for="group_number">Group Number</label>
+                                            <label for="group_number">Member ID</label>
                                             <input type="text" class="form-control" id="group_number" name="group_number" value="121332" required>
                                         </div>
                                     </div>
@@ -357,7 +369,7 @@
                                             <input type="text" class="form-control" id="treating_dentist_name" name="treating_dentist_name" value="Dr. Dillon" required>
                                         </div>
                                         <div class="col-md-6 form-group-sm">
-                                            <label for="dentist_npi">Dentist NPI</label>
+                                            <label for="dentist_npi">NPI Number</label>
                                             <input type="text" class="form-control" id="dentist_npi" name="dentist_npi" value="789012" required>
                                         </div>
                                     </div>
@@ -381,6 +393,17 @@
         const insuredDobInput = document.getElementById('insured_dob');
         const patientNameInput = document.getElementById('patient_name');
         const patientDobInput = document.getElementById('patient_dob');
+        
+        // For Emblem Health fields highlighting
+        const assistantTypeSelect = document.getElementById('assistant_type');
+        
+        // These are the only fields needed for Emblem Health
+        const emblemHealthFields = [
+            'patient_name',
+            'group_number', // Member ID
+            'patient_dob',
+            'dentist_npi'   // NPI Number
+        ];
         
         // Function to update patient fields based on relationship
         function updatePatientFields() {
@@ -443,6 +466,85 @@
                 });
             }
         });
+        
+        // Function to highlight or filter fields based on selected assistant
+        function handleAssistantTypeChange() {
+            const selectedAssistant = assistantTypeSelect.value;
+            
+            // Reset all form groups first
+            document.querySelectorAll('.form-group-sm').forEach(group => {
+                group.classList.remove('bg-light');
+                group.classList.remove('border-primary');
+                group.classList.remove('emblem-health-required');
+                
+                // Reset any previous styling
+                group.style.padding = '';
+                group.style.borderRadius = '';
+                group.style.border = '';
+                
+                // Reset label styling
+                const label = group.querySelector('label');
+                if (label) {
+                    label.style.fontWeight = '';
+                    label.style.color = '';
+                }
+            });
+            
+            if (selectedAssistant === 'emblem_health') {
+                // For Emblem Health, highlight only the required fields
+                emblemHealthFields.forEach(fieldId => {
+                    const input = document.getElementById(fieldId);
+                    if (input) {
+                        const formGroup = input.closest('.form-group-sm');
+                        if (formGroup) {
+                            // Add special highlighting
+                            formGroup.classList.add('emblem-health-required');
+                            formGroup.style.padding = '10px';
+                            formGroup.style.borderRadius = '5px';
+                            formGroup.style.border = '2px solid #0d6efd';
+                            formGroup.style.backgroundColor = '#f0f7ff';
+                            
+                            // Make label more prominent
+                            const label = formGroup.querySelector('label');
+                            if (label) {
+                                label.style.fontWeight = 'bold';
+                                label.style.color = '#0d6efd';
+                            }
+                        }
+                    }
+                });
+                
+                // Show a notification about required fields
+                const notificationDiv = document.createElement('div');
+                notificationDiv.id = 'emblem-health-notification';
+                notificationDiv.className = 'alert alert-info mt-3';
+                notificationDiv.innerHTML = '<strong>Emblem Health Selected:</strong> Only highlighted fields (Patient Name, Member ID, Date of Birth, and NPI Number) are required.';
+                
+                // Remove existing notification if it exists
+                const existingNotification = document.getElementById('emblem-health-notification');
+                if (existingNotification) {
+                    existingNotification.remove();
+                }
+                
+                // Add the notification before the first section
+                const firstDataCard = document.querySelector('.data-card');
+                if (firstDataCard) {
+                    firstDataCard.parentNode.insertBefore(notificationDiv, firstDataCard);
+                }
+            } else {
+                // Remove the notification for other assistant types
+                const existingNotification = document.getElementById('emblem-health-notification');
+                if (existingNotification) {
+                    existingNotification.remove();
+                }
+            }
+        }
+        
+        // Add event listener for assistant type change
+        assistantTypeSelect.addEventListener('change', handleAssistantTypeChange);
+        
+        // Run once on page load to set initial state
+        handleAssistantTypeChange();
         
         // Set default appointment date to today
         const appointmentDateInput = document.getElementById('appointment_date');
